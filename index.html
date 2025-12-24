@@ -15,6 +15,17 @@
     </div>
 
     <script type="text/javascript">
+      // Provide a real pyfetch implementation for the browser
+      window.pyfetch = async (url) => {
+          const response = await fetch(url);
+          // pyodide.http.pyfetch returns a response with a bytes() method.
+          // We need to replicate that, but browser fetch returns an ArrayBuffer.
+          const buffer = await response.arrayBuffer();
+          return {
+              bytes: () => Promise.resolve(new Uint8Array(buffer)),
+          };
+      };
+
       async function main() {
         let pyodide = await loadPyodide({
           indexURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/",
@@ -27,7 +38,12 @@
 
         const response = await fetch("run_imposition.py");
         const pythonScript = await response.text();
-        await pyodide.runPythonAsync(pythonScript);
+
+        try {
+            await pyodide.runPythonAsync(pythonScript);
+        } catch (e) {
+            console.error("Error running Python script:", e);
+        }
 
         document.getElementById("prev").onclick = () => {
           window.rendition.previous_chapter();
