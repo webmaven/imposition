@@ -9,12 +9,25 @@ class Rendition:
         self.book = book
         self.target_id = target_id
         self.target_element = document.getElementById(self.target_id)
+        self.current_chapter_index = 0
 
-    def display(self):
+        self.iframe = document.createElement('iframe')
+        self.iframe.name = "epub-rendition"
+        self.iframe.style.width = '100%'
+        self.iframe.style.height = '100%'
+        self.iframe.style.border = '2px solid red'
+        self.target_element.innerHTML = ''
+        self.target_element.appendChild(self.iframe)
+
+    def display(self, chapter_href):
         if not self.book.spine:
             return
 
-        chapter_href = self.book.spine[0]
+        try:
+            self.current_chapter_index = self.book.spine.index(chapter_href)
+        except ValueError:
+            pass
+
         chapter_content = self.book.zip_file.read(chapter_href)
 
         try:
@@ -25,46 +38,53 @@ class Rendition:
             self.target_element.textContent = "Error loading chapter: Could not parse XML."
             return
 
-        # Aggressively strip all CSS and add a margin reset
         head = root.find(".//{http://www.w3.org/1999/xhtml}head")
         if head is not None:
-            # Remove all <link rel="stylesheet"> tags
             for link in head.findall(".//{http://www.w3.org/1999/xhtml}link[@rel='stylesheet']"):
                 head.remove(link)
-            # Remove all <style> tags
             for style in head.findall(".//{http://www.w3.org/1999/xhtml}style"):
                 head.remove(style)
-
-            # Add a style tag to reset the body margin
             style_element = ET.Element('style')
             style_element.text = 'body { margin: 0; }'
             head.append(style_element)
 
-        # Also remove all inline style attributes from all elements
         for element in root.iter():
             if 'style' in element.attrib:
                 del element.attrib['style']
 
-        # Embed assets like images
         for element in root.findall(".//*[@src]"):
             self._embed_asset(element, 'src', chapter_href)
         for element in root.findall(".//*[@href]"):
             if not element.get('href', '').endswith('.css'):
                  self._embed_asset(element, 'href', chapter_href)
 
-        # Create iframe with a visible border for debugging
-        iframe = document.createElement('iframe')
-        iframe.name = "epub-rendition"
-        iframe.style.width = '100%'
-        iframe.style.height = '100%'
-        iframe.style.border = '2px solid red' # Added border
-
-        self.target_element.innerHTML = ''
-        self.target_element.appendChild(iframe)
-
-        # Add doctype and set content
         final_html = "<!DOCTYPE html>" + ET.tostring(root, method='html').decode('utf-8')
-        iframe.srcdoc = final_html
+        encoded_html = base64.b64encode(final_html.encode('utf-8')).decode('utf-8')
+        self.iframe.src = f"data:text/html;base64,{encoded_html}"
+
+    def display_toc(self):
+        toc_element = document.getElementById("toc")
+        if not toc_element:
+            return
+
+        toc_list = document.createElement("ul")
+        for item in self.book.toc:
+            list_item = document.createElement("li")
+            link = document.createElement("a")
+            link.textContent = item['label']
+            link.href = "#"
+
+            def click_handler(event, href=item['href']):
+                event.preventDefault()
+                self.display(href)
+
+            link.addEventListener("click", click_handler)
+
+            list_item.appendChild(link)
+            toc_list.appendChild(list_item)
+
+        toc_element.innerHTML = ""
+        toc_element.appendChild(toc_list)
 
     def _embed_asset(self, element, attribute, chapter_path):
         asset_path = element.get(attribute)
@@ -86,3 +106,13 @@ class Rendition:
         except KeyError:
             print(f"Asset not found: {full_asset_path}")
             pass
+
+    def next_chapter(self, event=None):
+        if self.current_chapter_index < len(self.book.spine) - 1:
+            self.current_chapter_index += 1
+            self.display(self.book.spine[self.current_chapter_index])
+
+    def previous_chapter(self, event=None):
+        if self.current_chapter_index > 0:
+            self.current_chapter_index -= 1
+            self.display(self.book.spine[self.current_chapter_index])

@@ -4,15 +4,21 @@
     <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
   </head>
   <body style="background-color: lightblue;">
-    <div id="debug-info" style="position: absolute; top: 10px; left: 10px; background-color: white; padding: 10px; border: 1px solid black; z-index: 100;"></div>
-    <div id="viewer" style="width: 800px; height: 600px; border: 1px solid black;"></div>
+    <div id="navigation" style="display: flex; gap: 20px; align-items: flex-start;">
+        <div id="toc" style="width: 200px; height: 600px; overflow-y: auto; border: 1px solid black;"></div>
+        <div id="viewer" style="width: 800px; height: 600px; border: 1px solid black;"></div>
+    </div>
+
+    <div id="controls" style="padding-top: 10px; display: flex; gap: 10px;">
+        <button id="prev">Previous</button>
+        <button id="next">Next</button>
+    </div>
 
     <script type="text/javascript">
       async function main() {
         let pyodide = await loadPyodide({
           indexURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/",
         });
-
         window.pyodide = pyodide;
 
         await pyodide.loadPackage("micropip");
@@ -22,8 +28,15 @@
         const response = await fetch("run_imposition.py");
         const pythonScript = await response.text();
         await pyodide.runPythonAsync(pythonScript);
-      }
 
+        document.getElementById("prev").onclick = () => {
+          window.rendition.previous_chapter();
+        };
+
+        document.getElementById("next").onclick = () => {
+          window.rendition.next_chapter();
+        };
+      }
       main();
     </script>
   </body>
