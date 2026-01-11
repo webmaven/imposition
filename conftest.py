@@ -1,3 +1,9 @@
+import sys
+from unittest.mock import MagicMock
+
+# Mock the 'js' module before any other imports
+sys.modules['js'] = MagicMock()
+
 import pytest
 import http.server
 import socketserver

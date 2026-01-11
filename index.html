@@ -3,11 +3,40 @@
   <head>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
   </head>
-  <body style="background-color: lightblue;">
-    <div id="debug-info" style="position: absolute; top: 10px; left: 10px; background-color: white; padding: 10px; border: 1px solid black; z-index: 100;"></div>
+  <body style="background-color: lightblue; display: flex;">
+    <div id="toc-container" style="width: 200px; height: 600px; border: 1px solid black; overflow-y: auto; margin-right: 10px;"></div>
     <div id="viewer" style="width: 800px; height: 600px; border: 1px solid black;"></div>
 
     <script type="text/javascript">
+      function displayToc(tocData) {
+        console.log("displayToc called with:", tocData);
+        const tocContainer = document.getElementById('toc-container');
+        tocContainer.innerHTML = '';
+        const ul = document.createElement('ul');
+
+        // The tocData is a JsProxy, so we need to convert it to a JavaScript array
+        const tocArray = tocData.toJs();
+        console.log("tocArray:", tocArray);
+
+        tocArray.forEach(item => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = '#';
+          a.textContent = item.get('title');
+          a.onclick = () => {
+            // We'll need a way to tell the Python code to navigate
+            // For now, we'll just log it
+            console.log("Navigate to:", item.get('url'));
+            window.pyodide.globals.get('rendition').display(item.get('url'));
+            return false;
+          };
+          li.appendChild(a);
+          ul.appendChild(li);
+        });
+        tocContainer.appendChild(ul);
+      }
+      window.displayToc = displayToc;
+
       async function main() {
         let pyodide = await loadPyodide({
           indexURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/",

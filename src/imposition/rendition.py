@@ -10,11 +10,19 @@ class Rendition:
         self.target_id = target_id
         self.target_element = document.getElementById(self.target_id)
 
-    def display(self):
+    def display(self, chapter_url=None):
         if not self.book.spine:
             return
 
-        chapter_href = self.book.spine[0]
+        anchor = None
+        if chapter_url and '#' in chapter_url:
+            anchor = chapter_url.split('#')[1]
+            chapter_href = chapter_url.split('#')[0]
+        elif chapter_url:
+            chapter_href = chapter_url
+        else:
+            chapter_href = self.book.spine[0]
+
         chapter_content = self.book.zip_file.read(chapter_href)
 
         try:
@@ -58,6 +66,9 @@ class Rendition:
         iframe.style.width = '100%'
         iframe.style.height = '100%'
         iframe.style.border = '2px solid red' # Added border
+
+        if anchor:
+            iframe.onload = f"this.contentWindow.location.hash = '#{anchor}'"
 
         self.target_element.innerHTML = ''
         self.target_element.appendChild(iframe)
