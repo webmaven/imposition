@@ -7,11 +7,7 @@ response = await pyfetch("test_book.epub")
 epub_bytes = await response.bytes()
 
 book = Book(epub_bytes)
-from js import window
 
 rendition = Rendition(book, "viewer")
 rendition.display()
-
-# Get TOC and display it
-toc = book.get_toc()
-window.displayToc(toc)
+rendition.display_toc()

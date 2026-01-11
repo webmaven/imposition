@@ -1,4 +1,5 @@
 from js import document
+from pyodide.ffi import create_proxy
 import xml.etree.ElementTree as ET
 import base64
 import os
@@ -9,6 +10,33 @@ class Rendition:
         self.book = book
         self.target_id = target_id
         self.target_element = document.getElementById(self.target_id)
+
+    def display_toc(self):
+        toc_container = document.getElementById('toc-container')
+        toc_container.innerHTML = ''
+        ul = document.createElement('ul')
+
+        for item in self.book.toc:
+            li = document.createElement('li')
+            a = document.createElement('a')
+            a.href = '#'
+            a.textContent = item['title']
+
+            # Define a handler function to be proxied
+            def create_handler(url):
+                def handler(event):
+                    event.preventDefault()
+                    self.display(url)
+                return handler
+
+            # Create a proxy for the onclick event handler
+            a.onclick = create_proxy(create_handler(item['url']))
+
+            li.appendChild(a)
+            ul.appendChild(li)
+
+        toc_container.appendChild(ul)
+
 
     def display(self, chapter_url=None):
         if not self.book.spine:
