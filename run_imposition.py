@@ -7,5 +7,7 @@ response = await pyfetch("test_book.epub")
 epub_bytes = await response.bytes()
 
 book = Book(epub_bytes)
+
 rendition = Rendition(book, "viewer")
 rendition.display()
+rendition.display_toc()
