@@ -1,3 +1,4 @@
+import asyncio
 import js
 from imposition.book import Book
 from imposition.rendition import Rendition
@@ -16,4 +17,5 @@ async def main():
     rendition.display_toc()
     rendition.display(book.spine[0])
 
-main()
+if __name__ == "__main__":
+    asyncio.run(main())
