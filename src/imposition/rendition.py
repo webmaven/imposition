@@ -1,4 +1,5 @@
 from js import document
+from pyodide.ffi import create_proxy
 import xml.etree.ElementTree as ET
 import base64
 import os
@@ -11,22 +12,45 @@ class Rendition:
         self.target_element = document.getElementById(self.target_id)
         self.current_chapter_index = 0
 
-        self.iframe = document.createElement('iframe')
-        self.iframe.name = "epub-rendition"
-        self.iframe.style.width = '100%'
-        self.iframe.style.height = '100%'
-        self.iframe.style.border = '2px solid red'
-        self.target_element.innerHTML = ''
-        self.target_element.appendChild(self.iframe)
+    def display_toc(self):
+        toc_container = document.getElementById('toc-container')
+        toc_container.innerHTML = ''
+        ul = document.createElement('ul')
 
-    def display(self, chapter_href):
+        for item in self.book.toc:
+            li = document.createElement('li')
+            a = document.createElement('a')
+            a.href = '#'
+            a.textContent = item['title']
+
+            # Define a handler function to be proxied
+            def create_handler(url):
+                def handler(event):
+                    event.preventDefault()
+                    self.display(url)
+                return handler
+
+            # Create a proxy for the onclick event handler
+            a.onclick = create_proxy(create_handler(item['url']))
+
+            li.appendChild(a)
+            ul.appendChild(li)
+
+        toc_container.appendChild(ul)
+
+
+    def display(self, chapter_url=None):
         if not self.book.spine:
             return
 
-        try:
-            self.current_chapter_index = self.book.spine.index(chapter_href)
-        except ValueError:
-            pass
+        anchor = None
+        if chapter_url and '#' in chapter_url:
+            anchor = chapter_url.split('#')[1]
+            chapter_href = chapter_url.split('#')[0]
+        elif chapter_url:
+            chapter_href = chapter_url
+        else:
+            chapter_href = self.book.spine[0]
 
         chapter_content = self.book.zip_file.read(chapter_href)
 
@@ -62,10 +86,11 @@ class Rendition:
         encoded_html = base64.b64encode(final_html.encode('utf-8')).decode('utf-8')
         self.iframe.src = f"data:text/html;base64,{encoded_html}"
 
-    def display_toc(self):
-        toc_element = document.getElementById("toc")
-        if not toc_element:
-            return
+        if anchor:
+            iframe.onload = f"this.contentWindow.location.hash = '#{anchor}'"
+
+        self.target_element.innerHTML = ''
+        self.target_element.appendChild(iframe)
 
         toc_list = document.createElement("ul")
         for item in self.book.toc:
