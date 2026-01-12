@@ -1,4 +1,3 @@
-
 [tool.hatch.envs.default]
 dependencies = [
   "pytest",
