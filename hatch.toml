@@ -1,14 +1,3 @@
-[project]
-name = "Imposition"
-version = "0.1.0"
-description = "A Python library for parsing and rendering EPUB files in Pyodide."
-authors = [
-    { name = "Michael R. Bernstein", email = "zopemaven@gmail.com" }
-]
-dependencies = [
-    "setuptools"
-]
-
 [tool.hatch.envs.default]
 dependencies = [
   "pytest",
@@ -17,3 +6,6 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 test = "pytest"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/imposition"]

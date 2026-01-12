@@ -57,8 +57,6 @@ class Rendition:
         iframe.name = "epub-rendition"
         iframe.style.width = '100%'
         iframe.style.height = '100%'
-        iframe.style.border = '2px solid red' # Added border
-
         self.target_element.innerHTML = ''
         self.target_element.appendChild(iframe)
 
