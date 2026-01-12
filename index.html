@@ -3,16 +3,33 @@
   <head>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
   </head>
-  <body style="background-color: lightblue; display: flex;">
-    <div id="toc-container" style="width: 200px; height: 600px; border: 1px solid black; overflow-y: auto; margin-right: 10px;"></div>
-    <div id="viewer" style="width: 800px; height: 600px; border: 1px solid black;"></div>
+  <body style="background-color: lightblue;">
+    <div id="navigation" style="display: flex; gap: 20px; align-items: flex-start;">
+        <div id="toc" style="width: 200px; height: 600px; overflow-y: auto; border: 1px solid black;"></div>
+        <div id="viewer" style="width: 800px; height: 600px; border: 1px solid black;"></div>
+    </div>
+
+    <div id="controls" style="padding-top: 10px; display: flex; gap: 10px;">
+        <button id="prev">Previous</button>
+        <button id="next">Next</button>
+    </div>
 
     <script type="text/javascript">
+      // Provide a real pyfetch implementation for the browser
+      window.pyfetch = async (url) => {
+          const response = await fetch(url);
+          // pyodide.http.pyfetch returns a response with a bytes() method.
+          // We need to replicate that, but browser fetch returns an ArrayBuffer.
+          const buffer = await response.arrayBuffer();
+          return {
+              bytes: () => Promise.resolve(new Uint8Array(buffer)),
+          };
+      };
+
       async function main() {
         let pyodide = await loadPyodide({
           indexURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/",
         });
-
         window.pyodide = pyodide;
 
         await pyodide.loadPackage("micropip");
@@ -21,9 +38,21 @@
 
         const response = await fetch("run_imposition.py");
         const pythonScript = await response.text();
-        await pyodide.runPythonAsync(pythonScript);
-      }
 
+        try {
+            await pyodide.runPythonAsync(pythonScript);
+        } catch (e) {
+            console.error("Error running Python script:", e);
+        }
+
+        document.getElementById("prev").onclick = () => {
+          window.rendition.previous_chapter();
+        };
+
+        document.getElementById("next").onclick = () => {
+          window.rendition.next_chapter();
+        };
+      }
       main();
     </script>
   </body>

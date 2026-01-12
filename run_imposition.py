@@ -1,13 +1,19 @@
-print("Starting Python script")
-from pyodide.http import pyfetch
+import js
 from imposition.book import Book
 from imposition.rendition import Rendition
 
-response = await pyfetch("test_book.epub")
-epub_bytes = await response.bytes()
+async def main():
+    print("Starting Python script")
+    response = await js.pyfetch("test_book.epub")
+    epub_bytes_proxy = await response.bytes()
+    epub_bytes = epub_bytes_proxy.to_py()
 
-book = Book(epub_bytes)
+    book = Book(epub_bytes)
+    rendition = Rendition(book, "viewer")
 
-rendition = Rendition(book, "viewer")
-rendition.display()
-rendition.display_toc()
+    js.window.rendition = rendition
+
+    rendition.display_toc()
+    rendition.display(book.spine[0])
+
+main()
