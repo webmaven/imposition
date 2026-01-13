@@ -2,7 +2,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 import io
 import posixpath
-from typing import List, Dict, Any
+from typing import List, Dict
 
 class Book:
     def __init__(self, epub_bytes: bytes) -> None:

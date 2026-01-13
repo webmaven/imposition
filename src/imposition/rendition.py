@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Callable, Optional, Dict, List
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from js import document
 from pyodide.ffi import create_proxy, JsProxy

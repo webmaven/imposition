@@ -1,12 +1,11 @@
-import asyncio
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 # Mock the 'js' module before importing the script that uses it
-sys.modules['js'] = MagicMock()
+sys.modules["js"] = MagicMock()
 
 # Add the 'src' directory to the Python path
 project_root = Path(__file__).parent.parent
@@ -14,9 +13,7 @@ sys.path.insert(0, str(project_root / "src"))
 # Also add the project root to find run_imposition
 sys.path.insert(0, str(project_root))
 
-
-# Now import the script to be tested
-import run_imposition
+import run_imposition  # noqa: E402
 
 # --- Test Fixtures and Mocks ---
 
