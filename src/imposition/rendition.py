@@ -2,7 +2,7 @@ from js import document
 from pyodide.ffi import create_proxy
 import xml.etree.ElementTree as ET
 import base64
-import os
+import posixpath
 import mimetypes
 
 class Rendition:
@@ -119,7 +119,7 @@ class Rendition:
         if asset_path.endswith('.css'):
             return
 
-        full_asset_path = os.path.normpath(os.path.join(os.path.dirname(chapter_path), asset_path))
+        full_asset_path = posixpath.normpath(posixpath.join(posixpath.dirname(chapter_path), asset_path))
 
         try:
             asset_content = self.book.zip_file.read(full_asset_path)
