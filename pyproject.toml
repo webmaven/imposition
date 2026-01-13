@@ -23,3 +23,9 @@ test = "pytest"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/imposition"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint.per-file-ignores]
+"src/imposition/rendition.py" = ["F821"]
