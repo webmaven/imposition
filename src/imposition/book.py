@@ -1,7 +1,7 @@
 import zipfile
 import xml.etree.ElementTree as ET
 import io
-import os
+import posixpath
 
 class Book:
     def __init__(self, epub_bytes):
@@ -16,7 +16,7 @@ class Book:
         root = ET.fromstring(container_xml)
         ns = {'c': 'urn:oasis:names:tc:opendocument:xmlns:container'}
         self.opf_path = root.find('c:rootfiles/c:rootfile', ns).get('full-path')
-        self.opf_dir = os.path.dirname(self.opf_path)
+        self.opf_dir = posixpath.dirname(self.opf_path)
 
         self.spine = self._parse_spine()
         self.toc = self._parse_toc()
@@ -35,7 +35,7 @@ class Book:
         # Find the toc.ncx path from the manifest
         toc_id = root.find('opf:spine', ns).get('toc')
         toc_href = root.find(f"opf:manifest/opf:item[@id='{toc_id}']", ns).get('href')
-        toc_path = os.path.normpath(os.path.join(self.opf_dir, toc_href))
+        toc_path = posixpath.normpath(posixpath.join(self.opf_dir, toc_href))
 
         # Parse the toc.ncx file
         toc_xml = self.zip_file.read(toc_path)
@@ -47,7 +47,7 @@ class Book:
             title = nav_point.find('ncx:navLabel/ncx:text', ns_ncx).text
             src = nav_point.find('ncx:content', ns_ncx).get('src')
             # The src is relative to the toc.ncx file, so create the full path
-            full_path = os.path.normpath(os.path.join(os.path.dirname(toc_path), src))
+            full_path = posixpath.normpath(posixpath.join(posixpath.dirname(toc_path), src))
             toc.append({'title': title, 'url': full_path})
 
         return toc
@@ -64,9 +64,9 @@ class Book:
         for item in root.findall('opf:manifest/opf:item', ns):
             href = item.get('href')
             # The href is relative to the .opf file, so create the full path
-            full_path = os.path.join(self.opf_dir, href)
+            full_path = posixpath.join(self.opf_dir, href)
             # Normalize the path to handle things like '..'
-            normalized_path = os.path.normpath(full_path)
+            normalized_path = posixpath.normpath(full_path)
             manifest[item.get('id')] = normalized_path
 
         spine_ids = [item.get('idref') for item in root.findall('opf:spine/opf:itemref', ns)]
