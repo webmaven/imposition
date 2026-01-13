@@ -15,7 +15,8 @@ dependencies = []
 dependencies = [
   "pytest",
   "pytest-asyncio",
-  "anyio"
+  "anyio",
+  "mypy"
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -29,3 +30,6 @@ line-length = 88
 
 [tool.ruff.lint.per-file-ignores]
 "src/imposition/rendition.py" = ["F821"]
+
+[tool.mypy]
+ignore_missing_imports = true

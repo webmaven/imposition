@@ -16,7 +16,13 @@ class Book:
         container_xml: bytes = self.zip_file.read('META-INF/container.xml')
         root: ET.Element = ET.fromstring(container_xml)
         ns: Dict[str, str] = {'c': 'urn:oasis:names:tc:opendocument:xmlns:container'}
-        self.opf_path: str = root.find('c:rootfiles/c:rootfile', ns).get('full-path')
+        opf_path_element = root.find('c:rootfiles/c:rootfile', ns)
+        if opf_path_element is None:
+            raise ValueError("Could not find rootfile in container.xml")
+        opf_path = opf_path_element.get('full-path')
+        if opf_path is None:
+            raise ValueError("Rootfile element has no full-path attribute")
+        self.opf_path: str = opf_path
         self.opf_dir: str = posixpath.dirname(self.opf_path)
 
         self.spine: List[str] = self._parse_spine()
@@ -34,8 +40,18 @@ class Book:
         ns: Dict[str, str] = {'opf': 'http://www.idpf.org/2007/opf'}
 
         # Find the toc.ncx path from the manifest
-        toc_id: str = root.find('opf:spine', ns).get('toc')
-        toc_href: str = root.find(f"opf:manifest/opf:item[@id='{toc_id}']", ns).get('href')
+        spine_element = root.find('opf:spine', ns)
+        if spine_element is None:
+            return []
+        toc_id = spine_element.get('toc')
+        if not toc_id:
+            return []
+        toc_item = root.find(f"opf:manifest/opf:item[@id='{toc_id}']", ns)
+        if toc_item is None:
+            return []
+        toc_href = toc_item.get('href')
+        if not toc_href:
+            return []
         toc_path: str = posixpath.normpath(posixpath.join(self.opf_dir, toc_href))
 
         # Parse the toc.ncx file
@@ -45,11 +61,15 @@ class Book:
 
         toc: List[Dict[str, str]] = []
         for nav_point in toc_root.findall('.//ncx:navPoint', ns_ncx):
-            title: str = nav_point.find('ncx:navLabel/ncx:text', ns_ncx).text
-            src: str = nav_point.find('ncx:content', ns_ncx).get('src')
-            # The src is relative to the toc.ncx file, so create the full path
-            full_path: str = posixpath.normpath(posixpath.join(posixpath.dirname(toc_path), src))
-            toc.append({'title': title, 'url': full_path})
+            title_element = nav_point.find('ncx:navLabel/ncx:text', ns_ncx)
+            content_element = nav_point.find('ncx:content', ns_ncx)
+            if title_element is not None and title_element.text and content_element is not None:
+                src = content_element.get('src')
+                if src:
+                    title = title_element.text
+                    # The src is relative to the toc.ncx file, so create the full path
+                    full_path: str = posixpath.normpath(posixpath.join(posixpath.dirname(toc_path), src))
+                    toc.append({'title': title, 'url': full_path})
 
         return toc
 
@@ -63,15 +83,18 @@ class Book:
 
         manifest: Dict[str, str] = {}
         for item in root.findall('opf:manifest/opf:item', ns):
-            href: str = item.get('href')
-            # The href is relative to the .opf file, so create the full path
-            full_path: str = posixpath.join(self.opf_dir, href)
-            # Normalize the path to handle things like '..'
-            normalized_path: str = posixpath.normpath(full_path)
-            manifest[item.get('id')] = normalized_path
+            item_id = item.get('id')
+            href = item.get('href')
+            if item_id and href:
+                # The href is relative to the .opf file, so create the full path
+                full_path: str = posixpath.join(self.opf_dir, href)
+                # Normalize the path to handle things like '..'
+                normalized_path: str = posixpath.normpath(full_path)
+                manifest[item_id] = normalized_path
 
-        spine_ids: List[str] = [item.get('idref') for item in root.findall('opf:spine/opf:itemref', ns)]
+        spine_ids_raw = [item.get('idref') for item in root.findall('opf:spine/opf:itemref', ns)]
+        spine_ids: List[str] = [idref for idref in spine_ids_raw if idref is not None]
 
-        spine_paths: List[str] = [manifest[id] for id in spine_ids]
+        spine_paths: List[str] = [manifest[id] for id in spine_ids if id in manifest]
 
         return spine_paths

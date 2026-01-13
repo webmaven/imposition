@@ -2,9 +2,76 @@
 
 This is the initial implementation of the `Imposition` library, a Python library intended to run under Pyodide for parsing and rendering EPUB files.
 
-## Current Status
+## Installation
 
-The library can successfully fetch and parse an EPUB file and render the content in an iframe. The project is configured with `hatch` for dependency management and `pytest` for testing.
+This package is not yet available on PyPI. To install it, you must build the wheel from the source and then install it using `pip`:
+
+```bash
+hatch build
+pip install dist/imposition-0.1.0-py3-none-any.whl
+```
+
+## Quick Start
+
+The following example demonstrates how to load an EPUB file and render it in a web page.
+
+```python
+import asyncio
+import js
+from imposition.book import Book
+from imposition.rendition import Rendition
+
+async def main():
+    response = await js.pyfetch("test_book.epub")
+    epub_bytes_proxy = await response.bytes()
+    epub_bytes = epub_bytes_proxy.to_py()
+
+    book = Book(epub_bytes)
+    rendition = Rendition(book, "viewer")
+
+    js.window.rendition = rendition
+
+    rendition.display_toc()
+    rendition.display(book.spine[0])
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Development Setup
+
+To set up a development environment, clone the repository and use [Hatch](https://hatch.pypa.io/latest/) to manage dependencies.
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/webmaven/imposition.git
+   cd imposition
+   ```
+
+2. **Create the development environment:**
+   ```bash
+   hatch env create
+   ```
+
+3. **Activate the environment:**
+   ```bash
+   hatch shell
+   ```
+
+4. **Run tests:**
+   ```bash
+   pytest
+   ```
+
+## Building
+
+To build the wheel for use with Pyodide, use the following command:
+
+```bash
+hatch build
+```
+
+This will create a `dist` directory with the wheel file (`imposition-0.1.0-py3-none-any.whl`).
 
 ## Testing
 
