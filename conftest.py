@@ -11,7 +11,6 @@ sys.modules["js"] = MagicMock()
 sys.modules["pyodide"] = MagicMock()
 sys.modules["pyodide.ffi"] = MagicMock()
 
-
 PORT = 8000
 
 class Handler(http.server.SimpleHTTPRequestHandler):
