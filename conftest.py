@@ -1,16 +1,15 @@
-import sys
-from unittest.mock import MagicMock
-
-# Mock browser-specific modules before any other imports
-sys.modules['js'] = MagicMock()
-sys.modules['pyodide'] = MagicMock()
-sys.modules['pyodide.ffi'] = MagicMock()
-
-import pytest
 import http.server
 import socketserver
+import sys
 import threading
-import os
+from unittest.mock import MagicMock
+
+import pytest
+
+# Mock browser-specific modules before any other imports
+sys.modules["js"] = MagicMock()
+sys.modules["pyodide"] = MagicMock()
+sys.modules["pyodide.ffi"] = MagicMock()
 
 PORT = 8000
 
