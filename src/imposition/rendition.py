@@ -1,31 +1,41 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Any, Callable, Optional
+
 from js import document
-from pyodide.ffi import create_proxy
+from pyodide.ffi import create_proxy, JsProxy
 import xml.etree.ElementTree as ET
 import base64
 import posixpath
 import mimetypes
 
-class Rendition:
-    def __init__(self, book, target_id):
-        self.book = book
-        self.target_id = target_id
-        self.target_element = document.getElementById(self.target_id)
-        self.current_chapter_index = 0
+if TYPE_CHECKING:
+    from .book import Book
 
-    def display_toc(self):
-        toc_container = document.getElementById('toc-container')
+class Rendition:
+    def __init__(self, book: Book, target_id: str) -> None:
+        self.book: Book = book
+        self.target_id: str = target_id
+        self.target_element: JsProxy = document.getElementById(self.target_id)
+        self.current_chapter_index: int = 0
+        self.iframe: JsProxy = document.createElement('iframe')
+        self.iframe.style.width = '100%'
+        self.iframe.style.height = '100%'
+        self.iframe.style.border = 'none'
+
+    def display_toc(self) -> None:
+        toc_container: JsProxy = document.getElementById('toc-container')
         toc_container.innerHTML = ''
-        ul = document.createElement('ul')
+        ul: JsProxy = document.createElement('ul')
 
         for item in self.book.toc:
-            li = document.createElement('li')
-            a = document.createElement('a')
+            li: JsProxy = document.createElement('li')
+            a: JsProxy = document.createElement('a')
             a.href = '#'
             a.textContent = item['title']
 
             # Define a handler function to be proxied
-            def create_handler(url):
-                def handler(event):
+            def create_handler(url: str) -> Callable[[JsProxy], None]:
+                def handler(event: JsProxy) -> None:
                     event.preventDefault()
                     self.display(url)
                 return handler
@@ -39,11 +49,12 @@ class Rendition:
         toc_container.appendChild(ul)
 
 
-    def display(self, chapter_url=None):
+    def display(self, chapter_url: Optional[str] = None) -> None:
         if not self.book.spine:
             return
 
-        anchor = None
+        anchor: Optional[str] = None
+        chapter_href: str
         if chapter_url and '#' in chapter_url:
             anchor = chapter_url.split('#')[1]
             chapter_href = chapter_url.split('#')[0]
@@ -52,23 +63,23 @@ class Rendition:
         else:
             chapter_href = self.book.spine[0]
 
-        chapter_content = self.book.zip_file.read(chapter_href)
+        chapter_content: bytes = self.book.zip_file.read(chapter_href)
 
         try:
             ET.register_namespace("", "http://www.w3.org/1999/xhtml")
-            root = ET.fromstring(chapter_content)
+            root: ET.Element = ET.fromstring(chapter_content)
         except ET.ParseError as e:
             print(f"Error parsing chapter content: {e}")
             self.target_element.textContent = "Error loading chapter: Could not parse XML."
             return
 
-        head = root.find(".//{http://www.w3.org/1999/xhtml}head")
+        head: Optional[ET.Element] = root.find(".//{http://www.w3.org/1999/xhtml}head")
         if head is not None:
             for link in head.findall(".//{http://www.w3.org/1999/xhtml}link[@rel='stylesheet']"):
                 head.remove(link)
             for style in head.findall(".//{http://www.w3.org/1999/xhtml}style"):
                 head.remove(style)
-            style_element = ET.Element('style')
+            style_element: ET.Element = ET.Element('style')
             style_element.text = 'body { margin: 0; }'
             head.append(style_element)
 
@@ -82,62 +93,44 @@ class Rendition:
             if not element.get('href', '').endswith('.css'):
                  self._embed_asset(element, 'href', chapter_href)
 
-        final_html = "<!DOCTYPE html>" + ET.tostring(root, method='html').decode('utf-8')
-        encoded_html = base64.b64encode(final_html.encode('utf-8')).decode('utf-8')
+        final_html: str = "<!DOCTYPE html>" + ET.tostring(root, method='html').decode('utf-8')
+        encoded_html: str = base64.b64encode(final_html.encode('utf-8')).decode('utf-8')
         self.iframe.src = f"data:text/html;base64,{encoded_html}"
 
         if anchor:
-            iframe.onload = f"this.contentWindow.location.hash = '#{anchor}'"
+            self.iframe.onload = f"this.contentWindow.location.hash = '#{anchor}'"
 
         self.target_element.innerHTML = ''
-        self.target_element.appendChild(iframe)
+        self.target_element.appendChild(self.iframe)
 
-        toc_list = document.createElement("ul")
-        for item in self.book.toc:
-            list_item = document.createElement("li")
-            link = document.createElement("a")
-            link.textContent = item['label']
-            link.href = "#"
-
-            def click_handler(event, href=item['href']):
-                event.preventDefault()
-                self.display(href)
-
-            link.addEventListener("click", click_handler)
-
-            list_item.appendChild(link)
-            toc_list.appendChild(list_item)
-
-        toc_element.innerHTML = ""
-        toc_element.appendChild(toc_list)
-
-    def _embed_asset(self, element, attribute, chapter_path):
-        asset_path = element.get(attribute)
+    def _embed_asset(self, element: ET.Element, attribute: str, chapter_path: str) -> None:
+        asset_path: Optional[str] = element.get(attribute)
         if not asset_path or asset_path.startswith(('data:', 'http:', 'https:')):
             return
 
         if asset_path.endswith('.css'):
             return
 
-        full_asset_path = posixpath.normpath(posixpath.join(posixpath.dirname(chapter_path), asset_path))
+        full_asset_path: str = posixpath.normpath(posixpath.join(posixpath.dirname(chapter_path), asset_path))
 
         try:
-            asset_content = self.book.zip_file.read(full_asset_path)
+            asset_content: bytes = self.book.zip_file.read(full_asset_path)
+            mime_type: Optional[str]
             mime_type, _ = mimetypes.guess_type(full_asset_path)
             if mime_type:
-                encoded_asset = base64.b64encode(asset_content).decode('utf-8')
-                data_uri = f"data:{mime_type};base64,{encoded_asset}"
+                encoded_asset: str = base64.b64encode(asset_content).decode('utf-8')
+                data_uri: str = f"data:{mime_type};base64,{encoded_asset}"
                 element.set(attribute, data_uri)
         except KeyError:
             print(f"Asset not found: {full_asset_path}")
             pass
 
-    def next_chapter(self, event=None):
+    def next_chapter(self, event: Optional[Any] = None) -> None:
         if self.current_chapter_index < len(self.book.spine) - 1:
             self.current_chapter_index += 1
             self.display(self.book.spine[self.current_chapter_index])
 
-    def previous_chapter(self, event=None):
+    def previous_chapter(self, event: Optional[Any] = None) -> None:
         if self.current_chapter_index > 0:
             self.current_chapter_index -= 1
             self.display(self.book.spine[self.current_chapter_index])

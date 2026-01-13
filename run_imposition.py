@@ -1,16 +1,17 @@
 import asyncio
 import js
+from pyodide.ffi import JsProxy
 from imposition.book import Book
 from imposition.rendition import Rendition
 
-async def main():
+async def main() -> None:
     print("Starting Python script")
-    response = await js.pyfetch("test_book.epub")
-    epub_bytes_proxy = await response.bytes()
-    epub_bytes = epub_bytes_proxy.to_py()
+    response: JsProxy = await js.pyfetch("test_book.epub")
+    epub_bytes_proxy: JsProxy = await response.bytes()
+    epub_bytes: bytes = epub_bytes_proxy.to_py()
 
-    book = Book(epub_bytes)
-    rendition = Rendition(book, "viewer")
+    book: Book = Book(epub_bytes)
+    rendition: Rendition = Rendition(book, "viewer")
 
     js.window.rendition = rendition
 
