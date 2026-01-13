@@ -23,3 +23,9 @@ test = "pytest"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/imposition"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = [
+    "tests",
+]
