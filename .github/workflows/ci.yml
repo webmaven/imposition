@@ -28,11 +28,11 @@ jobs:
       run: |
         ruff .
 
-    - name: Test with pytest
-      run: |
-        pytest
-
     - name: Build wheel
       run: |
         pip install build
         python -m build --wheel
+
+    - name: Test with pytest
+      run: |
+        pytest
