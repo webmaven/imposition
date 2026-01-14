@@ -1,5 +1,5 @@
 import sys
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 import xml.etree.ElementTree as ET
 
 import pytest
@@ -113,7 +113,7 @@ def test_display_with_anchor(mock_book, mock_document):
 
 def test_next_chapter(mock_book, mock_document):
     """Test navigating to the next chapter."""
-    with patch("imposition.rendition.document", mock_document) as mock_doc:
+    with patch("imposition.rendition.document", mock_document):
         rendition = Rendition(mock_book, "viewer")
         rendition.current_chapter_index = 0
         with patch.object(rendition, 'display') as mock_display:
