@@ -38,112 +38,17 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Development Setup
+## Contributing
 
-To set up a development environment, clone the repository and use [Hatch](https://hatch.pypa.io/latest/) to manage dependencies.
+Contributions are welcome! Please see the [Contributing Guidelines](CONTRIBUTING.md) for more information on how to get started.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/webmaven/imposition.git
-   cd imposition
-   ```
+## Changelog
 
-2. **Create the development environment:**
-   ```bash
-   hatch env create
-   ```
+For a detailed list of changes, please see the [Changelog](CHANGELOG.md).
 
-3. **Activate the environment:**
-   ```bash
-   hatch shell
-   ```
+## License
 
-4. **Run tests:**
-   ```bash
-   pytest
-   ```
-
-## Building
-
-To build the wheel for use with Pyodide, use the following command:
-
-```bash
-hatch build
-```
-
-This will create a `dist` directory with the wheel file (`imposition-0.1.0-py3-none-any.whl`).
-
-## Testing
-
-### Prerequisites
-
-Before running tests, ensure you have the following installed:
-
-1. **Python 3.13+** (or compatible version)
-2. **pytest** and **pytest-playwright**:
-
-   ```bash
-   pip install pytest pytest-playwright
-   ```
-
-3. **Playwright browsers** (Chromium is required for E2E tests):
-
-   ```bash
-   python -m playwright install chromium
-   ```
-
-### Building the Package
-
-The E2E tests require a built wheel package. Build it using:
-
-```bash
-pip install build
-python -m build --wheel
-```
-
-This creates `dist/imposition-0.1.0-py3-none-any.whl`, which is loaded by the demo page during testing.
-
-### Running Tests
-
-Run all tests with:
-
-```bash
-python -m pytest -v
-```
-
-For more detailed output:
-
-```bash
-python -m pytest -vv
-```
-
-### Test Coverage
-
-The current test suite includes:
-
-- **E2E Test** (`tests/test_e2e.py`): Tests the complete workflow of loading an EPUB file in a browser using Pyodide, rendering it in an iframe, and verifying the content is visible.
-
-### Test Artifacts
-
-Tests generate the following artifacts:
-
-- **Screenshots**: `tests/screenshots/` - Contains screenshots of test runs (both passed and failed)
-- **Wheel Package**: `dist/imposition-0.1.0-py3-none-any.whl` - Built package for Pyodide
-
-### Troubleshooting
-
-**Test fails with "404 - File not found" for the wheel:**
-
-- Make sure you've built the package first with `python -m build --wheel`
-
-**Test fails with "playwright: command not found":**
-
-- Install Playwright browsers: `python -m playwright install chromium`
-
-**Test times out waiting for iframe:**
-
-- Check that the HTTP server is running properly
-- Verify that Pyodide can load from the CDN (requires internet connection)
+This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for details.
 
 ## Error Handling
 
@@ -168,7 +73,7 @@ except ImpositionError as e:
 
 For a detailed competitive analysis and the strategic reasoning behind this roadmap, please see [`COMPETITIVE_ANALYSIS.md`](./COMPETITIVE_ANALYSIS.md).
 
-The following is a prioritized roadmap for the `Imposition` library, based on a competitive analysis of existing EPUB libraries.
+**Note:** The following roadmap is a strategic overview. For the most up-to-date list of priorities, please see the [GitHub issue tracker](https://github.com/webmaven/imposition/issues).
 
 ### Phase 1: Minimum Viable Product (MVP)
 
