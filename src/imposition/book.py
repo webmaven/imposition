@@ -80,19 +80,6 @@ class Book:
         if not toc_href:
             raise InvalidEpubError(f"TOC item '{toc_id}' has no href attribute.")
 
-        # Find the toc.ncx path from the manifest
-        spine_element = root.find('opf:spine', ns)
-        if spine_element is None:
-            return []
-        toc_id = spine_element.get('toc')
-        if not toc_id:
-            return []
-        toc_item = root.find(f"opf:manifest/opf:item[@id='{toc_id}']", ns)
-        if toc_item is None:
-            return []
-        toc_href = toc_item.get('href')
-        if not toc_href:
-            return []
         toc_path: str = posixpath.normpath(posixpath.join(self.opf_dir, toc_href))
 
         # Parse the toc.ncx file
