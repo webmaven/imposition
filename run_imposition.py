@@ -1,4 +1,3 @@
-import asyncio
 import js
 from pyodide.ffi import JsProxy
 from imposition.book import Book
