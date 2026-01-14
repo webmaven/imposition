@@ -3,6 +3,7 @@ import js
 from pyodide.ffi import JsProxy
 from imposition.book import Book
 from imposition.rendition import Rendition
+from imposition.dom import PyodideDOMAdapter
 
 async def main() -> None:
     print("Starting Python script")
@@ -11,7 +12,8 @@ async def main() -> None:
     epub_bytes: bytes = epub_bytes_proxy.to_py()
 
     book: Book = Book(epub_bytes)
-    rendition: Rendition = Rendition(book, "viewer")
+    dom_adapter = PyodideDOMAdapter()
+    rendition: Rendition = Rendition(book, dom_adapter, "viewer")
 
     js.window.rendition = rendition
 

@@ -57,10 +57,12 @@ async def test_main_application_flow(mock_js_object):
     # Patch the `js` object and the `Rendition` class within the run_imposition module
     with patch('run_imposition.js', mock_js_object), \
          patch('run_imposition.Book', autospec=True) as mock_book_class, \
+         patch('run_imposition.PyodideDOMAdapter', autospec=True) as mock_dom_adapter_class, \
          patch('run_imposition.Rendition', autospec=True) as mock_rendition_class:
 
         # Get the mock instances that will be created by the script
         mock_book_instance = mock_book_class.return_value
+        mock_dom_adapter_instance = mock_dom_adapter_class.return_value
         # Give the mock book a spine so the script can access it
         mock_book_instance.spine = ["chapter1.xhtml"]
         mock_rendition_instance = mock_rendition_class.return_value
@@ -78,12 +80,15 @@ async def test_main_application_flow(mock_js_object):
         epub_content = mock_js_object.pyfetch.return_value.bytes.return_value.to_py()
         mock_book_class.assert_called_once_with(epub_content)
 
-        # 3. Verify that the Rendition object was instantiated with the book and viewer ID
-        mock_rendition_class.assert_called_once_with(mock_book_instance, "viewer")
+        # 3. Verify that the PyodideDOMAdapter was instantiated
+        mock_dom_adapter_class.assert_called_once_with()
 
-        # 4. Verify that the rendition instance was attached to the mock window
+        # 4. Verify that the Rendition object was instantiated with the book and viewer ID
+        mock_rendition_class.assert_called_once_with(mock_book_instance, mock_dom_adapter_instance, "viewer")
+
+        # 5. Verify that the rendition instance was attached to the mock window
         assert mock_js_object.window.rendition is mock_rendition_instance
 
-        # 5. Verify that the TOC and the first chapter were displayed
+        # 6. Verify that the TOC and the first chapter were displayed
         mock_rendition_instance.display_toc.assert_called_once_with()
         mock_rendition_instance.display.assert_called_once_with("chapter1.xhtml")
