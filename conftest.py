@@ -4,6 +4,7 @@ import sys
 import threading
 from unittest.mock import MagicMock
 
+import nest_asyncio
 import pytest
 
 # Mock browser-specific modules before any other imports
@@ -11,6 +12,8 @@ sys.modules["js"] = MagicMock()
 sys.modules["pyodide"] = MagicMock()
 sys.modules["pyodide.ffi"] = MagicMock()
 
+def pytest_configure():
+    nest_asyncio.apply()
 
 PORT = 8000
 

@@ -45,7 +45,7 @@ def test_display_toc(mock_book, mock_dom_adapter):
     rendition = Rendition(mock_book, mock_dom_adapter, "viewer")
     rendition.display_toc()
 
-    toc_container = mock_dom_adapter.get_element_by_id("toc-container")
+    toc_container = mock_dom_adapter.get_element_by_id("toc")
     assert toc_container.innerHTML == ''
     assert len(toc_container.children) == 1
 

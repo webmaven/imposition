@@ -34,13 +34,14 @@
 
         await pyodide.loadPackage("micropip");
         const micropip = pyodide.pyimport("micropip");
-        await micropip.install("./dist/imposition-0.1.0-py3-none-any.whl");
+        await micropip.install("./dist/imposition-0.1.0-py2.py3-none-any.whl");
 
         const response = await fetch("run_imposition.py");
         const pythonScript = await response.text();
 
         try {
             await pyodide.runPythonAsync(pythonScript);
+            await pyodide.globals.get("main")();
         } catch (e) {
             console.error("Error running Python script:", e);
         }

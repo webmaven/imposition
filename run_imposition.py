@@ -6,7 +6,6 @@ from imposition.rendition import Rendition
 from imposition.dom import PyodideDOMAdapter
 
 async def main() -> None:
-    print("Starting Python script")
     response: JsProxy = await js.pyfetch("test_book.epub")
     epub_bytes_proxy: JsProxy = await response.bytes()
     epub_bytes: bytes = epub_bytes_proxy.to_py()
@@ -19,6 +18,3 @@ async def main() -> None:
 
     rendition.display_toc()
     rendition.display(book.spine[0])
-
-if __name__ == "__main__":
-    asyncio.run(main())
