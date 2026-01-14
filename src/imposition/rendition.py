@@ -6,6 +6,8 @@ import base64
 import posixpath
 import mimetypes
 
+from .dom import DOMAdapter, DOMElement
+
 if TYPE_CHECKING:
     from .book import Book
 

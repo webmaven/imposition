@@ -20,6 +20,9 @@ class DOMElement(Protocol):
     def setAttribute(self, name: str, value: str) -> None:
         ...
 
+    def preventDefault(self) -> None:
+        ...
+
 class DOMAdapter(Protocol):
     """A protocol for DOM operations."""
     def get_element_by_id(self, element_id: str) -> DOMElement:
@@ -33,7 +36,7 @@ class DOMAdapter(Protocol):
 
 class PyodideDOMAdapter:
     """An implementation of the DOMAdapter protocol using Pyodide."""
-    def get_element_by__id(self, element_id: str) -> JsProxy:
+    def get_element_by_id(self, element_id: str) -> JsProxy:
         return document.getElementById(element_id)
 
     def create_element(self, tag_name: str) -> JsProxy:
