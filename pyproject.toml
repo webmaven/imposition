@@ -16,7 +16,8 @@ dependencies = [
   "pytest",
   "pytest-asyncio",
   "anyio",
-  "mypy"
+  "mypy",
+  "pytest-cov"
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -33,3 +34,9 @@ line-length = 88
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src/imposition"]
+
+[tool.coverage.report]
+fail_under = 80
