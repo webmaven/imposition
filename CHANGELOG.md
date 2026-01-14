@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Table of contents display.
 - Project documentation (`CONTRIBUTING.md`, `CHANGELOG.md`, `AGENTS.md`).
+- Custom exception hierarchy for error handling.
+- `LICENSE` file (Apache 2.0).
 
 ### Changed
 - Updated documentation for accuracy and completeness.
