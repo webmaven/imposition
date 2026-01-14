@@ -21,6 +21,20 @@ The project's roadmap is outlined in the `README.md` file. However, for day-to-d
 
 -   **Issue tracker > Roadmap**: The issue tracker is more tactical and pragmatic and takes precedence over the roadmap, which is more strategic and aspirational.
 
+## Documentation
+
+### CONTRIBUTING.md
+
+The [`CONTRIBUTING.md`](./CONTRIBUTING.md) file contains instructions for setting up the development environment, running tests, and submitting pull requests. If you make changes to the development process, build steps, or quality checks, you must update this file accordingly.
+
+### CHANGELOG.md
+
+The [`CHANGELOG.md`](./CHANGELOG.md) file tracks the project's version history. For any user-visible changes, such as new features, bug fixes, or performance improvements, you must add an entry to the "Unreleased" section of this file.
+
 ## Programmatic checks
 
-Currently, there are no programmatic checks. This section can be updated in the future to include any checks that can be run to verify the quality of the code.
+To ensure code quality, the following checks are in place. These should be run before submitting any changes.
+
+-   **Tests**: Run the test suite with `hatch run pytest`.
+-   **Linting**: Check the code for style issues with `hatch run ruff check .`.
+-   **Type Checking**: Verify the type hints with `hatch run mypy .`.
