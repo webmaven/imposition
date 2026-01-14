@@ -1,12 +1,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from js import document
-from pyodide.ffi import create_proxy, JsProxy
 import xml.etree.ElementTree as ET
 import base64
 import posixpath
 import mimetypes
+
+from .dom import DOMAdapter, DOMElement
 
 if TYPE_CHECKING:
     from .book import Book
@@ -20,21 +20,24 @@ class Rendition:
     chapters, and provides navigation between them.
     """
 
-    def __init__(self, book: Book, target_id: str) -> None:
+    def __init__(self, book: Book, dom_adapter: DOMAdapter, target_id: str) -> None:
         """
         Initializes the Rendition object.
 
         :param book: An initialized Book object.
         :type book: Book
+        :param dom_adapter: An adapter for DOM operations.
+        :type dom_adapter: DOMAdapter
         :param target_id: The ID of the HTML element where the EPUB content
             will be rendered.
         :type target_id: str
         """
         self.book: Book = book
+        self.dom_adapter: DOMAdapter = dom_adapter
         self.target_id: str = target_id
-        self.target_element: JsProxy = document.getElementById(self.target_id)
+        self.target_element: DOMElement = self.dom_adapter.get_element_by_id(self.target_id)
         self.current_chapter_index: int = 0
-        self.iframe: JsProxy = document.createElement('iframe')
+        self.iframe: DOMElement = self.dom_adapter.create_element('iframe')
         self.iframe.style.width = '100%'
         self.iframe.style.height = '100%'
         self.iframe.style.border = 'none'
@@ -43,25 +46,25 @@ class Rendition:
         """
         Renders the table of contents into the 'toc-container' element.
         """
-        toc_container: JsProxy = document.getElementById('toc-container')
+        toc_container: DOMElement = self.dom_adapter.get_element_by_id('toc-container')
         toc_container.innerHTML = ''
-        ul: JsProxy = document.createElement('ul')
+        ul: DOMElement = self.dom_adapter.create_element('ul')
 
         for item in self.book.toc:
-            li: JsProxy = document.createElement('li')
-            a: JsProxy = document.createElement('a')
+            li: DOMElement = self.dom_adapter.create_element('li')
+            a: DOMElement = self.dom_adapter.create_element('a')
             a.href = '#'
             a.textContent = item['title']
 
             # Define a handler function to be proxied
-            def create_handler(url: str) -> Callable[[JsProxy], None]:
-                def handler(event: JsProxy) -> None:
+            def create_handler(url: str) -> Callable[[DOMElement], None]:
+                def handler(event: DOMElement) -> None:
                     event.preventDefault()
                     self.display(url)
                 return handler
 
             # Create a proxy for the onclick event handler
-            a.onclick = create_proxy(create_handler(item['url']))
+            a.onclick = self.dom_adapter.create_proxy(create_handler(item['url']))
 
             li.appendChild(a)
             ul.appendChild(li)
