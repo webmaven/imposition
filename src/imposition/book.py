@@ -6,10 +6,26 @@ from typing import List, Dict, Optional
 
 from .exceptions import InvalidEpubError, MissingContainerError
 
+
 class Book:
+    """
+    Parses and provides access to the contents of an EPUB file.
+
+    This class takes the binary content of an EPUB file, parses its
+    structure, and provides methods to access its table of contents and
+    spine.
+    """
+
     def __init__(self, epub_bytes: bytes) -> None:
         """
         Initializes the Book object from a bytes object of the EPUB file.
+
+        :param epub_bytes: The binary content of the EPUB file.
+        :type epub_bytes: bytes
+        :raises InvalidEpubError: If the file is not a valid ZIP archive or if
+            the EPUB structure is invalid.
+        :raises MissingContainerError: If the META-INF/container.xml file is
+            not found.
         """
         epub_file = io.BytesIO(epub_bytes)
         try:
@@ -55,6 +71,13 @@ class Book:
         self.toc: List[Dict[str, str]] = self._parse_toc()
 
     def get_toc(self) -> List[Dict[str, str]]:
+        """
+        Returns the table of contents.
+
+        :return: A list of dictionaries, where each dictionary represents a
+            table of contents item with 'title' and 'url' keys.
+        :rtype: List[Dict[str, str]]
+        """
         return self.toc
 
     def _parse_toc(self) -> List[Dict[str, str]]:
