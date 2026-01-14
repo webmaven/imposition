@@ -11,8 +11,25 @@ import mimetypes
 if TYPE_CHECKING:
     from .book import Book
 
+
 class Rendition:
+    """
+    Renders an EPUB file into a web-based reader interface.
+
+    This class handles the display of the EPUB's table of contents and
+    chapters, and provides navigation between them.
+    """
+
     def __init__(self, book: Book, target_id: str) -> None:
+        """
+        Initializes the Rendition object.
+
+        :param book: An initialized Book object.
+        :type book: Book
+        :param target_id: The ID of the HTML element where the EPUB content
+            will be rendered.
+        :type target_id: str
+        """
         self.book: Book = book
         self.target_id: str = target_id
         self.target_element: JsProxy = document.getElementById(self.target_id)
@@ -23,6 +40,9 @@ class Rendition:
         self.iframe.style.border = 'none'
 
     def display_toc(self) -> None:
+        """
+        Renders the table of contents into the 'toc-container' element.
+        """
         toc_container: JsProxy = document.getElementById('toc-container')
         toc_container.innerHTML = ''
         ul: JsProxy = document.createElement('ul')
@@ -50,9 +70,18 @@ class Rendition:
 
 
     def display(self, chapter_url: Optional[str] = None) -> None:
+        """
+        Displays a specific chapter in the rendition iframe.
+
+        If no chapter URL is provided, it displays the first chapter in the
+        spine. It also handles embedding of assets like images.
+
+        :param chapter_url: The URL of the chapter to display. Can include an
+            anchor.
+        :type chapter_url: Optional[str]
+        """
         if not self.book.spine:
             return
-
         anchor: Optional[str] = None
         chapter_href: str
         if chapter_url and '#' in chapter_url:
@@ -126,11 +155,23 @@ class Rendition:
             pass
 
     def next_chapter(self, event: Optional[Any] = None) -> None:
+        """
+        Displays the next chapter in the book's spine.
+
+        :param event: An optional event object (e.g., from a button click).
+        :type event: Optional[Any]
+        """
         if self.current_chapter_index < len(self.book.spine) - 1:
             self.current_chapter_index += 1
             self.display(self.book.spine[self.current_chapter_index])
 
     def previous_chapter(self, event: Optional[Any] = None) -> None:
+        """
+        Displays the previous chapter in the book's spine.
+
+        :param event: An optional event object (e.g., from a button click).
+        :type event: Optional[Any]
+        """
         if self.current_chapter_index > 0:
             self.current_chapter_index -= 1
             self.display(self.book.spine[self.current_chapter_index])
