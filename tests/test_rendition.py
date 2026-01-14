@@ -5,7 +5,7 @@ import pytest
 
 from imposition.rendition import Rendition
 from imposition.book import Book
-from tests.mocks import MockDOMAdapter, MockDOMElement
+from tests.mocks import MockDOMAdapter
 
 
 @pytest.fixture

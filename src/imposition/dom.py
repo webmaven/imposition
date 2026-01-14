@@ -1,5 +1,9 @@
 from typing import Protocol, Any, Callable
 
+from js import document
+from pyodide.ffi import create_proxy as pyodide_create_proxy
+from pyodide.ffi import JsProxy
+
 class DOMElement(Protocol):
     """A protocol for DOM elements."""
     style: Any
@@ -27,14 +31,9 @@ class DOMAdapter(Protocol):
     def create_proxy(self, handler: Callable[..., Any]) -> Callable[..., Any]:
         ...
 
-from js import document
-from pyodide.ffi import create_proxy as pyodide_create_proxy
-from pyodide.ffi import JsProxy
-
-
 class PyodideDOMAdapter:
     """An implementation of the DOMAdapter protocol using Pyodide."""
-    def get_element_by_id(self, element_id: str) -> JsProxy:
+    def get_element_by__id(self, element_id: str) -> JsProxy:
         return document.getElementById(element_id)
 
     def create_element(self, tag_name: str) -> JsProxy:
