@@ -145,6 +145,25 @@ Tests generate the following artifacts:
 - Check that the HTTP server is running properly
 - Verify that Pyodide can load from the CDN (requires internet connection)
 
+## Error Handling
+
+The library uses a custom exception hierarchy to report errors during EPUB parsing. All exceptions inherit from `imposition.ImpositionError`.
+
+- **`ImpositionError`**: The base class for all exceptions in the library.
+- **`InvalidEpubError`**: Raised for general EPUB format errors, such as malformed XML files or missing required elements.
+- **`MissingContainerError`**: A subclass of `InvalidEpubError`, raised specifically when the `META-INF/container.xml` file is not found in the EPUB archive.
+
+When using the library, it's recommended to wrap the `Book` constructor in a `try...except` block to handle these potential errors:
+
+```python
+from imposition import Book, ImpositionError
+
+try:
+    book = Book(epub_bytes)
+except ImpositionError as e:
+    print(f"Error loading book: {e}")
+```
+
 ## Roadmap
 
 For a detailed competitive analysis and the strategic reasoning behind this roadmap, please see [`COMPETITIVE_ANALYSIS.md`](./COMPETITIVE_ANALYSIS.md).
