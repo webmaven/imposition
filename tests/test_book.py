@@ -1,8 +1,8 @@
 import pytest
 from imposition.book import Book
+from imposition.exceptions import InvalidEpubError, MissingContainerError
 import io
 import zipfile
-import xml.etree.ElementTree as ET
 
 @pytest.fixture
 def book():
@@ -30,12 +30,53 @@ def create_epub_bytes(files):
             zip_file.writestr(path, content)
     return zip_buffer.getvalue()
 
-@pytest.fixture
-def epub_missing_container():
-    return create_epub_bytes({'mimetype': 'application/epub+zip'})
+def test_invalid_zip_file():
+    with pytest.raises(InvalidEpubError, match="not a valid ZIP archive"):
+        Book(b"this is not a zip file")
 
-@pytest.fixture
-def epub_malformed_opf():
+def test_missing_container_xml():
+    epub_bytes = create_epub_bytes({'mimetype': 'application/epub+zip'})
+    with pytest.raises(MissingContainerError, match="META-INF/container.xml not found"):
+        Book(epub_bytes)
+
+def test_malformed_container_xml():
+    epub_bytes = create_epub_bytes({
+        'mimetype': 'application/epub+zip',
+        'META-INF/container.xml': 'this is not valid XML'
+    })
+    with pytest.raises(InvalidEpubError, match="Could not parse META-INF/container.xml"):
+        Book(epub_bytes)
+
+def test_missing_rootfile_in_container():
+    container_xml = """<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+  </rootfiles>
+</container>
+"""
+    epub_bytes = create_epub_bytes({
+        'mimetype': 'application/epub+zip',
+        'META-INF/container.xml': container_xml
+    })
+    with pytest.raises(InvalidEpubError, match="Could not find rootfile element"):
+        Book(epub_bytes)
+
+def test_missing_opf_file():
+    container_xml = """<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>
+"""
+    epub_bytes = create_epub_bytes({
+        'mimetype': 'application/epub+zip',
+        'META-INF/container.xml': container_xml
+    })
+    with pytest.raises(InvalidEpubError, match="OPF file not found"):
+        Book(epub_bytes)
+
+def test_malformed_opf_file():
     container_xml = """<?xml version="1.0"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
@@ -44,14 +85,15 @@ def epub_malformed_opf():
 </container>
 """
     opf_content = "this is not valid XML"
-    return create_epub_bytes({
+    epub_bytes = create_epub_bytes({
         'mimetype': 'application/epub+zip',
         'META-INF/container.xml': container_xml,
         'OEBPS/content.opf': opf_content
     })
+    with pytest.raises(InvalidEpubError, match="Could not parse OPF file"):
+        Book(epub_bytes)
 
-@pytest.fixture
-def epub_malformed_ncx():
+def test_spine_item_not_in_manifest():
     container_xml = """<?xml version="1.0"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
@@ -61,36 +103,19 @@ def epub_malformed_ncx():
 """
     opf_content = """<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="pub-id" version="2.0">
-  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
-    <dc:title>Test Book</dc:title>
-    <dc:creator>Test Author</dc:creator>
-    <dc:identifier id="pub-id">12345</dc:identifier>
-  </metadata>
+  <metadata/>
   <manifest>
-    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
     <item id="chapter1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>
   </manifest>
-  <spine toc="ncx">
-    <itemref idref="chapter1"/>
+  <spine>
+    <itemref idref="non-existent-item"/>
   </spine>
 </package>
 """
-    ncx_content = "this is not valid XML"
-    return create_epub_bytes({
+    epub_bytes = create_epub_bytes({
         'mimetype': 'application/epub+zip',
         'META-INF/container.xml': container_xml,
-        'OEBPS/content.opf': opf_content,
-        'OEBPS/toc.ncx': ncx_content
+        'OEBPS/content.opf': opf_content
     })
-
-def test_missing_container_xml(epub_missing_container):
-    with pytest.raises(KeyError):
-        Book(epub_missing_container)
-
-def test_malformed_opf(epub_malformed_opf):
-    with pytest.raises(ET.ParseError):
-        Book(epub_malformed_opf)
-
-def test_malformed_ncx(epub_malformed_ncx):
-    with pytest.raises(ET.ParseError):
-        Book(epub_malformed_ncx)
+    with pytest.raises(InvalidEpubError, match="Item in spine not found in manifest"):
+        Book(epub_bytes)
