@@ -2,7 +2,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 import io
 import posixpath
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from .exceptions import InvalidEpubError, MissingContainerError
 
@@ -31,11 +31,15 @@ class Book:
             raise InvalidEpubError("Could not parse META-INF/container.xml.") from e
 
         ns: Dict[str, str] = {"c": "urn:oasis:names:tc:opendocument:xmlns:container"}
-        rootfile_element: ET.Element = root.find("c:rootfiles/c:rootfile", ns)
+        rootfile_element: Optional[ET.Element] = root.find("c:rootfiles/c:rootfile", ns)
         if rootfile_element is None:
             raise InvalidEpubError("Could not find rootfile element in container.xml.")
 
-        self.opf_path: str = rootfile_element.get("full-path")
+        opf_path: Optional[str] = rootfile_element.get("full-path")
+        if not opf_path:
+            raise InvalidEpubError("Rootfile element in container.xml is missing the 'full-path' attribute.")
+
+        self.opf_path: str = opf_path
         self.opf_dir: str = posixpath.dirname(self.opf_path)
 
         try:
@@ -59,20 +63,23 @@ class Book:
         """
         ns: Dict[str, str] = {"opf": "http://www.idpf.org/2007/opf"}
 
-        # Find the toc.ncx path from the manifest
-        spine_element: ET.Element = self.opf_root.find("opf:spine", ns)
+        spine_element: Optional[ET.Element] = self.opf_root.find("opf:spine", ns)
         if spine_element is None:
             raise InvalidEpubError("Could not find spine element in OPF file.")
-        toc_id: str = spine_element.get("toc")
+        toc_id: Optional[str] = spine_element.get("toc")
         if not toc_id:
             return []  # No TOC defined
 
-        toc_item_element: ET.Element = self.opf_root.find(
+        toc_item_element: Optional[ET.Element] = self.opf_root.find(
             f"opf:manifest/opf:item[@id='{toc_id}']", ns
         )
         if toc_item_element is None:
             raise InvalidEpubError(f"TOC item with id '{toc_id}' not found in manifest.")
-        toc_href: str = toc_item_element.get("href")
+
+        toc_href: Optional[str] = toc_item_element.get("href")
+        if not toc_href:
+            raise InvalidEpubError(f"TOC item '{toc_id}' has no href attribute.")
+
         toc_path: str = posixpath.normpath(posixpath.join(self.opf_dir, toc_href))
 
         # Parse the toc.ncx file
@@ -89,14 +96,16 @@ class Book:
         ns_ncx: Dict[str, str] = {"ncx": "http://www.daisy.org/z3986/2005/ncx/"}
 
         toc: List[Dict[str, str]] = []
-        for nav_point in toc_root.findall(".//ncx:navPoint", ns_ncx):
-            title: str = nav_point.find("ncx:navLabel/ncx:text", ns_ncx).text
-            src: str = nav_point.find("ncx:content", ns_ncx).get("src")
-            # The src is relative to the toc.ncx file, so create the full path
-            full_path: str = posixpath.normpath(
-                posixpath.join(posixpath.dirname(toc_path), src)
-            )
-            toc.append({"title": title, "url": full_path})
+        for nav_point in toc_root.findall('.//ncx:navPoint', ns_ncx):
+            title_element = nav_point.find('ncx:navLabel/ncx:text', ns_ncx)
+            content_element = nav_point.find('ncx:content', ns_ncx)
+            if title_element is not None and title_element.text and content_element is not None:
+                src = content_element.get('src')
+                if src:
+                    title = title_element.text
+                    # The src is relative to the toc.ncx file, so create the full path
+                    full_path: str = posixpath.normpath(posixpath.join(posixpath.dirname(toc_path), src))
+                    toc.append({'title': title, 'url': full_path})
 
         return toc
 
@@ -126,9 +135,8 @@ class Book:
         if spine_element is None:
             raise InvalidEpubError("Could not find spine element in OPF file.")
 
-        spine_ids: List[str] = [
-            item.get("idref") for item in spine_element.findall("opf:itemref", ns)
-        ]
+        spine_ids_raw = [item.get("idref") for item in spine_element.findall("opf:itemref", ns)]
+        spine_ids: List[str] = [idref for idref in spine_ids_raw if idref is not None]
 
         try:
             spine_paths: List[str] = [manifest[id] for id in spine_ids]
