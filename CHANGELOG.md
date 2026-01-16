@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Input validation for EPUB files, including ZIP integrity, mimetype, and required structure (container.xml, OPF).
 - Improved navigation UI with a modern sidebar layout for Table of Contents.
 - Navigation controls (Previous/Next) and TOC interaction logic implemented in Python.
 - Automatic navigation button state management (disabling at spine ends).
