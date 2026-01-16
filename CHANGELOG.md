@@ -8,12 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Table of contents display.
+- Improved navigation UI with a modern sidebar layout for Table of Contents.
+- Navigation controls (Previous/Next) and TOC interaction logic implemented in Python.
+- Automatic navigation button state management (disabling at spine ends).
+- Active Table of Contents entry highlighting.
+- End-to-end tests using Playwright.
+- Representative screenshot in README.md.
 - Project documentation (`CONTRIBUTING.md`, `CHANGELOG.md`, `AGENTS.md`).
 - Custom exception hierarchy for error handling.
 - `LICENSE` file (Apache 2.0).
 
 ### Changed
+- Refactored `index.html` to support a more structured layout.
+- Extended `DOMElement` protocol to include `disabled` and `className` properties.
 - Updated documentation for accuracy and completeness.
 - Updated Pyodide version in demo to v0.29.1.
 
