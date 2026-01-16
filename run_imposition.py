@@ -16,4 +16,5 @@ async def main() -> None:
     js.window.rendition = rendition
 
     rendition.display_toc()
+    rendition.setup_controls("prev", "next")
     rendition.display(book.spine[0])

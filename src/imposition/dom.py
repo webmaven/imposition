@@ -13,6 +13,8 @@ class DOMElement(Protocol):
     onclick: Callable[[Any], None]
     onload: str
     src: str
+    disabled: bool
+    className: str
 
     def appendChild(self, child: "DOMElement") -> None:
         ...

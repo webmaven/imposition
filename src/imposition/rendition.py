@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, List, Tuple
 
 import xml.etree.ElementTree as ET
 import base64
@@ -41,13 +41,51 @@ class Rendition:
         self.iframe.style.width = '100%'
         self.iframe.style.height = '100%'
         self.iframe.style.border = 'none'
+        self.toc_links: List[Tuple[DOMElement, str]] = []
+        self.prev_button: Optional[DOMElement] = None
+        self.next_button: Optional[DOMElement] = None
+
+    def setup_controls(self, prev_id: str, next_id: str) -> None:
+        """
+        Sets up the navigation controls by attaching event listeners.
+
+        :param prev_id: The ID of the 'Previous' button element.
+        :type prev_id: str
+        :param next_id: The ID of the 'Next' button element.
+        :type next_id: str
+        """
+        self.prev_button = self.dom_adapter.get_element_by_id(prev_id)
+        self.next_button = self.dom_adapter.get_element_by_id(next_id)
+
+        self.prev_button.onclick = self.dom_adapter.create_proxy(self.previous_chapter)
+        self.next_button.onclick = self.dom_adapter.create_proxy(self.next_chapter)
+
+        self.update_controls()
 
     def display_toc(self) -> None:
         """
         Renders the table of contents into the 'toc' element.
         """
         toc_container: DOMElement = self.dom_adapter.get_element_by_id('toc')
+        # Preserve the <h3> header if it exists, otherwise clear
+        # Actually, in index.html I have <h3>Contents</h3>.
+        # rendition previously did: toc_container.innerHTML = ''
+        # Let's see if there's a specific container for the list.
+        # In my new index.html I didn't add a specific div for the list,
+        # but I can just append the ul to the toc div.
+        # To avoid clearing the <h3>, I could find the ul or just append.
+        # Let's just clear everything for now as it was before, or better,
+        # find where to inject.
+
+        # If I want to be safe, I'll look for a <ul> and replace it, or just clear.
+        # The previous implementation was:
         toc_container.innerHTML = ''
+        # I'll add the <h3> back from Python if I clear it.
+        header: DOMElement = self.dom_adapter.create_element('h3')
+        header.textContent = "Contents"
+        toc_container.appendChild(header)
+
+        self.toc_links = []
         ul: DOMElement = self.dom_adapter.create_element('ul')
 
         for item in self.book.toc:
@@ -66,10 +104,12 @@ class Rendition:
             # Create a proxy for the onclick event handler
             a.onclick = self.dom_adapter.create_proxy(create_handler(item['url']))
 
+            self.toc_links.append((a, item['url']))
             li.appendChild(a)
             ul.appendChild(li)
 
         toc_container.appendChild(ul)
+        self.update_controls()
 
 
     def display(self, chapter_url: Optional[str] = None) -> None:
@@ -94,6 +134,9 @@ class Rendition:
             chapter_href = chapter_url
         else:
             chapter_href = self.book.spine[0]
+
+        if chapter_href in self.book.spine:
+            self.current_chapter_index = self.book.spine.index(chapter_href)
 
         chapter_content: bytes = self.book.zip_file.read(chapter_href)
 
@@ -134,6 +177,7 @@ class Rendition:
 
         self.target_element.innerHTML = ''
         self.target_element.appendChild(self.iframe)
+        self.update_controls()
 
     def _embed_asset(self, element: ET.Element, attribute: str, chapter_path: str) -> None:
         asset_path: Optional[str] = element.get(attribute)
@@ -156,6 +200,23 @@ class Rendition:
         except KeyError:
             print(f"Asset not found: {full_asset_path}")
             pass
+
+    def update_controls(self) -> None:
+        """
+        Updates the state of navigation buttons and TOC highlighting.
+        """
+        if self.prev_button:
+            self.prev_button.disabled = (self.current_chapter_index == 0)
+        if self.next_button:
+            self.next_button.disabled = (self.current_chapter_index >= len(self.book.spine) - 1)
+
+        current_href = self.book.spine[self.current_chapter_index]
+        for a, url in self.toc_links:
+            chapter_url = url.split('#')[0]
+            if chapter_url == current_href:
+                a.className = 'active'
+            else:
+                a.className = ''
 
     def next_chapter(self, event: Optional[Any] = None) -> None:
         """
