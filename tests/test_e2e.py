@@ -23,7 +23,9 @@ def test_renders_first_chapter(page: Page, http_server):
 
     # The iframe should contain the cover image
     iframe_element = iframe.element_handle()
+    assert iframe_element is not None
     frame = iframe_element.content_frame()
+    assert frame is not None
     expect(frame.locator("img.x-ebookmaker-cover")).to_be_visible()
 
     # Take a screenshot on success
