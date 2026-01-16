@@ -33,6 +33,16 @@ class Book:
         except zipfile.BadZipFile as e:
             raise InvalidEpubError("The file is not a valid ZIP archive.") from e
 
+        # Validate mimetype file
+        try:
+            mimetype_content: bytes = self.zip_file.read("mimetype")
+            if mimetype_content.strip() != b"application/epub+zip":
+                raise InvalidEpubError(
+                    f"Invalid mimetype: {mimetype_content.decode('utf-8', errors='replace')}"
+                )
+        except KeyError as e:
+            raise InvalidEpubError("mimetype file not found in the EPUB file.") from e
+
         # Find the .opf file from container.xml
         try:
             container_xml: bytes = self.zip_file.read("META-INF/container.xml")

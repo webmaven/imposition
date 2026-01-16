@@ -119,3 +119,13 @@ def test_spine_item_not_in_manifest():
     })
     with pytest.raises(InvalidEpubError, match="Item in spine not found in manifest"):
         Book(epub_bytes)
+
+def test_missing_mimetype_file():
+    epub_bytes = create_epub_bytes({'META-INF/container.xml': 'some content'})
+    with pytest.raises(InvalidEpubError, match="mimetype file not found"):
+        Book(epub_bytes)
+
+def test_invalid_mimetype_content():
+    epub_bytes = create_epub_bytes({'mimetype': 'text/plain'})
+    with pytest.raises(InvalidEpubError, match="Invalid mimetype: text/plain"):
+        Book(epub_bytes)
