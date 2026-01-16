@@ -11,6 +11,10 @@ hatch build
 pip install dist/imposition-0.1.0-py3-none-any.whl
 ```
 
+## Requirements
+
+The library and demo require Pyodide v0.29.1 or later.
+
 ## Quick Start
 
 The following example demonstrates how to load an EPUB file and render it in a web page.

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.1/full/pyodide.js"></script>
   </head>
   <body style="background-color: lightblue;">
     <div id="navigation" style="display: flex; gap: 20px; align-items: flex-start;">
@@ -28,7 +28,7 @@
 
       async function main() {
         let pyodide = await loadPyodide({
-          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/",
+          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.1/full/",
         });
         window.pyodide = pyodide;
 
