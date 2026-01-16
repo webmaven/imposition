@@ -8,7 +8,7 @@ import pytest
 sys.modules["js"] = MagicMock()
 
 # Add the 'src' directory to the Python path
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root / "src"))
 # Also add the project root to find run_imposition
 sys.path.insert(0, str(project_root))

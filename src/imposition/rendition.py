@@ -44,9 +44,9 @@ class Rendition:
 
     def display_toc(self) -> None:
         """
-        Renders the table of contents into the 'toc-container' element.
+        Renders the table of contents into the 'toc' element.
         """
-        toc_container: DOMElement = self.dom_adapter.get_element_by_id('toc-container')
+        toc_container: DOMElement = self.dom_adapter.get_element_by_id('toc')
         toc_container.innerHTML = ''
         ul: DOMElement = self.dom_adapter.create_element('ul')
 

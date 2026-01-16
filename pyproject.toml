@@ -17,7 +17,10 @@ dependencies = [
   "pytest-asyncio",
   "anyio",
   "mypy",
-  "pytest-cov"
+  "pytest-cov",
+  "playwright",
+  "pytest-playwright",
+  "nest-asyncio"
 ]
 
 [tool.hatch.envs.default.scripts]
