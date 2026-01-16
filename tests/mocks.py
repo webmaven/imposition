@@ -14,6 +14,8 @@ class MockDOMElement:
         self.onclick: Optional[Callable[[Any], None]] = None
         self.onload: str = ""
         self.src: str = ""
+        self.disabled: bool = False
+        self.className: str = ""
         self.preventDefault: Mock = Mock()
 
     def appendChild(self, child: "MockDOMElement") -> None:

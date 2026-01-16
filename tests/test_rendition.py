@@ -47,9 +47,14 @@ def test_display_toc(mock_book, mock_dom_adapter):
 
     toc_container = mock_dom_adapter.get_element_by_id("toc")
     assert toc_container.innerHTML == ''
-    assert len(toc_container.children) == 1
+    # Expect 2 children: <h3> and <ul>
+    assert len(toc_container.children) == 2
 
-    ul_element = toc_container.children[0]
+    header_element = toc_container.children[0]
+    assert header_element.tag_name == 'h3'
+    assert header_element.textContent == 'Contents'
+
+    ul_element = toc_container.children[1]
     assert ul_element.tag_name == 'ul'
     assert len(ul_element.children) == len(mock_book.toc)
 
@@ -120,3 +125,36 @@ def test_embed_asset(mock_book, mock_dom_adapter):
     mock_guess_type.assert_called_once_with(expected_asset_path)
     mock_book.zip_file.read.assert_called_once_with(expected_asset_path)
     assert element.get('src').startswith('data:image/jpeg;base64,')
+
+def test_setup_controls(mock_book, mock_dom_adapter):
+    """Test that setup_controls correctly attaches event listeners."""
+    rendition = Rendition(mock_book, mock_dom_adapter, "viewer")
+    rendition.setup_controls("prev", "next")
+
+    prev_button = mock_dom_adapter.get_element_by_id("prev")
+    next_button = mock_dom_adapter.get_element_by_id("next")
+
+    assert prev_button.onclick is not None
+    assert next_button.onclick is not None
+    # Initially on first chapter, so prev should be disabled
+    assert prev_button.disabled is True
+    assert next_button.disabled is False
+
+def test_update_controls_highlighting(mock_book, mock_dom_adapter):
+    """Test that update_controls correctly highlights the active TOC link."""
+    rendition = Rendition(mock_book, mock_dom_adapter, "viewer")
+    rendition.display_toc()
+
+    # Initially chapter 1 is active (index 0)
+    rendition.current_chapter_index = 0
+    rendition.update_controls()
+
+    assert rendition.toc_links[0][0].className == 'active'
+    assert rendition.toc_links[1][0].className == ''
+
+    # Change to chapter 2
+    rendition.current_chapter_index = 1
+    rendition.update_controls()
+
+    assert rendition.toc_links[0][0].className == ''
+    assert rendition.toc_links[1][0].className == 'active'

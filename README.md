@@ -2,6 +2,8 @@
 
 This is the initial implementation of the `Imposition` library, a Python library intended to run under Pyodide for parsing and rendering EPUB files.
 
+![Imposition EPUB Reader Screenshot](assets/screenshot.png)
+
 ## Installation
 
 This package is not yet available on PyPI. To install it, you must build the wheel from the source and then install it using `pip`:
