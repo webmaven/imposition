@@ -24,6 +24,10 @@ jobs:
         pip install -e .
         pip install ruff pytest pytest-asyncio anyio mypy pytest-cov nest-asyncio playwright pytest-playwright
 
+    - name: Install Playwright browsers
+      run: |
+        playwright install
+
     - name: Lint with ruff
       run: |
         ruff check .
